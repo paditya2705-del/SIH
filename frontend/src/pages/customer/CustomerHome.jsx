@@ -1,19 +1,42 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import ServiceCard from "../../components/customer/ServiceCard";
 import EmergencyCard from "../../components/customer/EmergencyCard";
 import WorkerCard from "../../components/customer/workerCard";
 import BottomNav from "../../components/navigation/BottomNav";
+import { logoutUser } from '../../features/auth/authThunks';
+import { fetchNotifications } from '../../features/notifications/notificationThunks';
+import { fetchServices } from '../../features/services/serviceThunks';
+import { fetchNearbyWorkers } from '../../features/workers/workerThunks';
 
 const CustomerHome = () => {
-  const services = [
-    { icon: "⚡", name: "Electrical", accent: "amber" },
-    { icon: "🔧", name: "Plumbing", accent: "sky" },
-    { icon: "🪚", name: "Carpentry", accent: "violet" },
-    { icon: "❄️", name: "AC Repair", accent: "indigo" },
-    { icon: "🎨", name: "Painting", accent: "rose" },
-    { icon: "🧹", name: "Cleaning", accent: "emerald" },
-    { icon: "🔨", name: "Appliance", accent: "amber" },
-    { icon: "•••", name: "More", accent: "indigo" },
-  ];
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { items: services, status, error } = useSelector((state) => state.services);
+  const {
+    nearbyWorkers,
+    nearbyStatus,
+    nearbyError,
+  } = useSelector((state) => state.workers);
+  const { unreadCount, status: notificationStatus } = useSelector((state) => state.notifications);
+
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchServices());
+    }
+    if (nearbyStatus === 'idle') {
+      dispatch(fetchNearbyWorkers());
+    }
+    if (notificationStatus === 'idle') {
+      dispatch(fetchNotifications());
+    }
+  }, [dispatch, status, nearbyStatus, notificationStatus]);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate('/login');
+  };
 
   return (
     <main className="min-h-screen bg-slate-50 pb-24 md:pb-10">
@@ -28,9 +51,22 @@ const CustomerHome = () => {
                 </h1>
               </div>
 
-              <button className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-sm ring-1 ring-slate-200">
-                🔔
-              </button>
+              <div className="flex items-center gap-2">
+                <button className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-sm ring-1 ring-slate-200">
+                  <span>🔔</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
+                >
+                  Logout
+                </button>
+              </div>
             </header>
 
             <section>
@@ -50,16 +86,28 @@ const CustomerHome = () => {
                 <button className="text-sm font-medium text-indigo-600">See all</button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
-                {services.map((service) => (
-                  <ServiceCard
-                    key={service.name}
-                    icon={service.icon}
-                    name={service.name}
-                    accent={service.accent}
-                  />
-                ))}
-              </div>
+              {status === 'loading' ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <div key={index} className="h-20 animate-pulse rounded-2xl bg-slate-200" />
+                  ))}
+                </div>
+              ) : status === 'failed' ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                  {error || 'Services could not be loaded.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
+                  {services.map((service) => (
+                    <ServiceCard
+                      key={service.id || service.name}
+                      icon={service.icon}
+                      name={service.name}
+                      accent={service.accent}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
 
             <EmergencyCard />
@@ -70,38 +118,32 @@ const CustomerHome = () => {
                 <button className="text-sm font-medium text-indigo-600">View all</button>
               </div>
 
-              <div className="flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible lg:grid-cols-2 xl:grid-cols-3">
-                <div className="min-w-[240px] shrink-0 md:min-w-0">
-                  <WorkerCard
-                    name="Rahul Verma"
-                    role="Plumber"
-                    rating="4.9"
-                    distance="2.4 km away"
-                    earnings="₹450 / visit"
-                    accent="emerald"
-                  />
+              {nearbyStatus === 'loading' ? (
+                <div className="flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible lg:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="h-28 min-w-[240px] shrink-0 animate-pulse rounded-2xl bg-slate-200 md:min-w-0" />
+                  ))}
                 </div>
-                <div className="min-w-[240px] shrink-0 md:min-w-0">
-                  <WorkerCard
-                    name="Amit Singh"
-                    role="Electrician"
-                    rating="4.8"
-                    distance="3.1 km away"
-                    earnings="₹520 / visit"
-                    accent="amber"
-                  />
+              ) : nearbyStatus === 'failed' ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                  {nearbyError || 'Workers could not be loaded.'}
                 </div>
-                <div className="min-w-[240px] shrink-0 md:min-w-0">
-                  <WorkerCard
-                    name="Sonal Rani"
-                    role="AC Repair"
-                    rating="4.7"
-                    distance="4.8 km away"
-                    earnings="₹610 / visit"
-                    accent="sky"
-                  />
+              ) : (
+                <div className="flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible lg:grid-cols-2 xl:grid-cols-3">
+                  {nearbyWorkers.map((worker) => (
+                    <div key={worker.id} className="min-w-[240px] shrink-0 md:min-w-0">
+                      <WorkerCard
+                        name={worker.name}
+                        role={worker.role}
+                        rating={String(worker.rating)}
+                        distance={worker.distanceLabel}
+                        earnings={worker.earnings}
+                        accent={worker.accent}
+                      />
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </section>
           </div>
 

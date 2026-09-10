@@ -1,4 +1,43 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPaymentByBookingId } from '../../features/payments/paymentThunks';
+
 const BookingConfirmation = () => {
+  const dispatch = useDispatch();
+  const { selectedPayment, selectedStatus, selectedError } = useSelector((state) => state.payments);
+
+  useEffect(() => {
+    if (selectedStatus === 'idle') {
+      dispatch(fetchPaymentByBookingId('bk-1001'));
+    }
+  }, [dispatch, selectedStatus]);
+
+  const payment = selectedPayment;
+
+  if (selectedStatus === 'loading') {
+    return (
+      <main className="min-h-screen bg-slate-50 pb-24">
+        <div className="mx-auto max-w-md px-4 py-5">
+          <div className="h-12 animate-pulse rounded-2xl bg-slate-200" />
+          <div className="mt-5 h-44 animate-pulse rounded-3xl bg-slate-200" />
+          <div className="mt-6 h-40 animate-pulse rounded-3xl bg-slate-200" />
+        </div>
+      </main>
+    );
+  }
+
+  if (selectedStatus === 'failed') {
+    return (
+      <main className="min-h-screen bg-slate-50 pb-24">
+        <div className="mx-auto max-w-md px-4 py-5">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            {selectedError || 'Payment details could not be loaded.'}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 pb-24">
       <div className="mx-auto max-w-md px-4 py-5">
@@ -25,7 +64,7 @@ const BookingConfirmation = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Service</p>
-                <p className="font-semibold text-slate-900">Kitchen tap repair</p>
+                <p className="font-semibold text-slate-900">{payment?.serviceName || 'Kitchen tap repair'}</p>
               </div>
               <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
                 On the way
@@ -40,8 +79,8 @@ const BookingConfirmation = () => {
               🔧
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">Rahul Verma</h3>
-              <p className="text-sm text-slate-500">Plumber • 4.9 rating</p>
+              <h3 className="text-lg font-semibold text-slate-900">{payment?.workerName || 'Rahul Verma'}</h3>
+              <p className="text-sm text-slate-500">{payment?.workerRole || 'Plumber'} • 4.9 rating</p>
             </div>
             <span className="rounded-full bg-yellow-50 px-2 py-1 text-[10px] font-semibold text-yellow-700">
               ⭐ 4.9
@@ -51,11 +90,11 @@ const BookingConfirmation = () => {
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl bg-slate-50 p-3">
               <p className="text-slate-500">ETA</p>
-              <p className="mt-1 font-semibold text-slate-900">12 mins</p>
+              <p className="mt-1 font-semibold text-slate-900">{payment?.eta || 12} mins</p>
             </div>
             <div className="rounded-2xl bg-slate-50 p-3">
               <p className="text-slate-500">Payment</p>
-              <p className="mt-1 font-semibold text-slate-900">₹530</p>
+              <p className="mt-1 font-semibold text-slate-900">₹{payment?.amount || 530}</p>
             </div>
           </div>
         </section>
@@ -66,19 +105,19 @@ const BookingConfirmation = () => {
           <div className="mt-4 space-y-3 text-sm text-slate-600">
             <div className="flex justify-between">
               <span>Service charge</span>
-              <span>₹450</span>
+              <span>₹{payment?.serviceCharge || 450}</span>
             </div>
             <div className="flex justify-between">
               <span>Urgency fee</span>
-              <span>₹80</span>
+              <span>₹{payment?.urgencyFee || 80}</span>
             </div>
             <div className="flex justify-between">
               <span>Welfare contribution</span>
-              <span>₹42</span>
+              <span>₹{payment?.welfareContribution || 42}</span>
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-3 font-semibold text-slate-900">
               <span>Total</span>
-              <span>₹572</span>
+              <span>₹{payment?.amount || 572}</span>
             </div>
           </div>
         </section>

@@ -1,4 +1,16 @@
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logoutUser } from '../../features/auth/authThunks';
+
 const WorkerDashboard = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate('/login');
+  };
+
   const jobs = [
     {
       title: "Kitchen pipe repair",
@@ -27,9 +39,17 @@ const WorkerDashboard = () => {
                 <h1 className="text-[24px] font-bold tracking-tight text-slate-900 sm:text-[28px]">Rahul</h1>
               </div>
 
-              <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Online
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Online
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm"
+                >
+                  Logout
+                </button>
               </div>
             </header>
 
